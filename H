@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Habilidades de Ciberseguridad | Elite Cyber Ops</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            background: #000;
+            color: #8a2be2;
+            font-family: 'Courier New', monospace;
+            overflow: hidden;
+            height: 100vh;
+            position: relative;
+        }
+
+        .matrix-bg {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 1;
+            opacity: 0.1;
+        }
+
+        .access-screen {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: #000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            transition: opacity 1s ease-out;
+        }
+
+        .access-screen.hidden { opacity: 0; pointer-events: none; }
+
+        .terminal {
+            background: rgba(0, 20, 40, 0.9);
+            padding: 40px;
+            border: 2px solid #8a2be2;
+            border-radius: 10px;
+            max-width: 600px;
+            text-align: center;
+        }
+
+        .blink { animation: blink 1s infinite; }
+        @keyframes blink { 0%,50% {opacity:1;} 51%,100%{opacity:0;} }
+
+        .scan-line {
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #8a2be2, transparent);
+            position: absolute;
+            width: 100%;
+            animation: scan 2s infinite;
+        }
+        @keyframes scan { 0%{top:0;opacity:1;} 50%{opacity:0.5;} 100%{top:100%;opacity:0;} }
+
+        h1 {
+            font-size: 3em;
+            text-shadow: 0 0 20px #8a2be2;
+            margin-bottom: 30px;
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+        @keyframes glow { 
+            from { text-shadow: 0 0 20px #8a2be2; } 
+            to { text-shadow: 0 0 40px #8a2be2, 0 0 60px #8a2be2; } 
+        }
+
+        .main-content {
+            padding: 50px;
+            max-width: 1400px;
+            margin: 0 auto;
+            opacity: 0;
+            transform: translateY(50px);
+            transition: all 1s ease;
+            position: relative;
+            z-index: 10;
+        }
+
+        .main-content.show { opacity: 1; transform: translateY(0); }
+
+        .skills-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+            margin-top: 50px;
+        }
+
+        .skill-card {
+            background: rgba(0, 20, 60, 0.8);
+            padding: 30px;
+            border: 2px solid #8a2be2;
+            border-radius: 15px;
+            transition: all 0.4s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .skill-card::before {
+            content: '';
+            position: absolute;
+            top: -50%; left: -50%;
+            width: 200%; height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(138,43,226,0.1), transparent);
+            transform: rotate(45deg);
+            transition: all 0.6s;
+        }
+
+        .skill-card:hover::before { transform: rotate(45deg) translateX(100%) translateY(100%); }
+        .skill-card:hover {
+            transform: translateY(-15px);
+            box-shadow: 0 20px 40px rgba(138,43,226,0.3);
+            border-color: #9932cc;
+        }
+
+        .skill-card.clicked {
+            border-color: #00ff00;
+            box-shadow: 0 0 30px rgba(0,255,0,0.5);
+        }
+
+        .skill-icon { font-size: 3em; margin-bottom: 20px; }
+        .skill-title { font-size: 1.8em; margin-bottom: 15px; color: #8a2be2; }
+
+        .progress-bar {
+            width: 100%; height: 8px;
+            background: rgba(0,0,0,0.5);
+            border-radius: 4px;
+            margin: 15px 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #8a2be2, #9932cc);
+            width: 0%;
+            transition: width 2s ease;
+            box-shadow: 0 0 10px #8a2be2;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.95);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal.show { display: flex; }
+
+        .modal-content {
+            background: rgba(0, 20, 60, 0.95);
+            border: 3px solid #8a2be2;
+            border-radius: 20px;
+            padding: 50px;
+            max-width: 700px;
+            max-height: 80vh;
+            overflow-y: auto;
+            text-align: center;
+            position: relative;
+            animation: modalSlide 0.5s ease-out;
+        }
+
+        @keyframes modalSlide {
+            from { transform: scale(0.7) translateY(-50px); opacity: 0; }
+            to { transform: scale(1) translateY(0); opacity: 1; }
+        }
+
+        .modal-icon { font-size: 4em; margin-bottom: 20px; }
+        .modal-title { font-size: 2.5em; margin-bottom: 30px; color: #00ff00; }
+        .modal-desc { 
+            font-size: 1.1em; 
+            line-height: 1.6; 
+            color: #d8bfd8;
+            text-align: left;
+            max-width: 600px;
+            margin: 0 auto 20px;
+        }
+
+        .modal-desc-ru {
+            font-size: 1em;
+            line-height: 1.5;
+            color: #87ceeb;
+            text-align: left;
+            max-width: 600px;
+            margin: 0 auto;
+            font-family: 'Consolas', 'Courier New', monospace;
+            background: rgba(255,255,255,0.05);
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #ff6b35;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 20px;
+            right: 25px;
+            background: none;
+            border: 2px solid #ff4444;
+            color: #ff4444;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.8em;
+            font-weight: bold;
+            font-family: Arial, sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            line-height: 1;
+        }
+
+        .close-btn:hover {
+            background: #ff4444;
+            color: #fff;
+            transform: scale(1.1);
+        }
+
+        button {
+            background: linear-gradient(45deg, #8a2be2, #9932cc);
+            color: #000;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.2em;
+            font-weight: bold;
+            font-family: inherit;
+            border-radius: 25px;
+            cursor: pointer;
+            margin: 10px;
+            transition: all 0.3s;
+        }
+
+        button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 25px rgba(138,43,226,0.4);
+        }
+
+        @media (max-width: 768px) {
+            h1 { font-size: 2em; }
+            .skills-grid { grid-template-columns: 1fr; }
+            .terminal { padding: 20px; }
+            .modal-content { padding: 30px; margin: 20px; }
+            .modal-desc, .modal-desc-ru { font-size: 0.95em; }
+        }
+    </style>
+</head>
+<body>
+    <!-- EFECTO MATRIX MANTENIDO -->
+    <canvas class="matrix-bg" id="matrix"></canvas>
+
+    <!-- Pantalla de Acceso Hacker -->
+    <div class="access-screen" id="accessScreen">
+        <div class="scan-line"></div>
+        <div class="terminal">
+            <div style="font-size: 1.5em; margin-bottom: 20px;">
+                <span class="blink">🔒</span> ANÁLISIS DE SEGURIDAD EN PROCESO...
+            </div>
+            <div id="scanOutput" style="text-align: left; margin: 20px 0; min-height: 120px;">
+                <div>Scanning network interface... OK</div>
+                <div>Checking firewall status... ACTIVE</div>
+                <div>Analyzing memory protection... SECURE</div>
+                <div>Validando system integrity... ✓</div>
+                <div id="finalStatus" style="font-size: 1.2em; color: #00ff00; font-weight: bold;"></div>
+            </div>
+            <button onclick="grantAccess()">ACEPTAR ACCESO</button>
+            <div style="margin-top: 20px; font-size: 0.9em; opacity: 0.7; color: #d8bfd8;">
+                Presiona para autorizar entrada al sistema
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Descripción -->
+    <div class="modal" id="skillModal">
+        <div class="modal-content">
+            <button class="close-btn" onclick="closeModal()">&times;</button>
+            <div class="modal-icon" id="modalIcon"></div>
+            <div class="modal-title" id="modalTitle"></div>
+            <div class="modal-desc" id="modalDesc"></div>
+            <div class="modal-desc-ru" id="modalDescRu"></div>
+        </div>
+    </div>
+
+    <!-- Contenido Principal -->
+    <div class="main-content" id="mainContent">
+        <header style="text-align: center; margin-bottom: 50px;">
+            <h1>HABILIDADES DE CIBERSEGURIDAD</h1>
+            <p style="font-size: 1.3em; color: #d8bfd8;">Nivel Alumno Destacado | Especialista Certificado en Ziven Academy</p>
+        </header>
+
+        <div class="skills-grid">
+            <div class="skill-card" data-skill="pentesting">
+                <div class="skill-icon">🛡️</div>
+                <div class="skill-title">Pentesting</div>
+                <div class="progress-bar"><div class="progress-fill" data-width="95%"></div></div>
+            </div>
+
+            <div class="skill-card" data-skill="forense">
+                <div class="skill-icon">🔍</div>
+                <div class="skill-title">Analista Forense Digital</div>
+                <div class="progress-bar"><div class="progress-fill" data-width="92%"></div></div>
+            </div>
+
+            <div class="skill-card" data-skill="lenguajes">
+                <div class="skill-icon">💻</div>
+                <div class="skill-title">Lenguajes</div>
+                <div class="progress-bar"><div class="progress-fill" data-width="88%"></div></div>
+            </div>
+
+            <div class="skill-card" data-skill="soc">
+                <div class="skill-icon">📊</div>
+                <div class="skill-title">Analista de SOC</div>
+                <div class="progress-bar"><div class="progress-fill" data-width="90%"></div></div>
+            </div>
+
+            <div class="skill-card" data-skill="cripto">
+                <div class="skill-icon">🔐</div>
+                <div class="skill-title">Criptografía</div>
+                <div class="progress-bar"><div class="progress-fill" data-width="93%"></div></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // SISTEMA DE SONIDOS HACKER
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+        function playBeep(frequency = 800, duration = 0.1, type = 'sine') {
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.value = frequency;
+            oscillator.type = type;
+            
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + duration);
+        }
+
+        function playScanSound() {
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            const lfo = audioContext.createOscillator();
+            const lfoGain = audioContext.createGain();
+            
+            lfo.frequency.value = 5;
+            lfoGain.gain.value = 200;
+            
+            oscillator.connect(gainNode);
+            lfo.connect(lfoGain);
+            lfoGain.connect(oscillator.frequency);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.value = 400;
+            oscillator.type = 'sawtooth';
+            
+            gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.8);
+            
+            oscillator.start(audioContext.currentTime);
+            lfo.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.8);
+            lfo.stop(audioContext.currentTime + 0.8);
+        }
+
+        function playAccessGranted() {
+            const notes = [200, 400, 800, 600, 1200];
+            notes.forEach((freq, i) => {
+                setTimeout(() => {
+                    playBeep(freq, 0.15, 'triangle');
+                }, i * 100);
+            });
+        }
+
+        function playCardClick() {
+            playBeep(1200, 0.08);
+            setTimeout(() => playBeep(800, 0.08), 50);
+        }
+
+        function playModalOpen() {
+            playBeep(600, 0.2, 'sawtooth');
+            setTimeout(() => playBeep(900, 0.15, 'sawtooth'), 100);
+            setTimeout(() => playBeep(1200, 0.1, 'sawtooth'), 200);
+        }
+
+        // EFECTO MATRIX DEL FONDO
+        const canvas = document.getElementById('matrix');
+        const ctx = canvas.getContext('2d');
+        
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        resizeCanvas();
+
+        const chars = '01アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン';
+        const fontSize = 14;
+        let columns, drops;
+
+        function initMatrix() {
+            columns = canvas.width / fontSize;
+            drops = Array(Math.floor(columns)).fill(1);
+        }
+        initMatrix();
+
+        function drawMatrix() {
+            ctx.fillStyle = 'rgba(0,0,0,0.05)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#8a2be2';
+            ctx.font = fontSize + 'px monospace';
+            drops.forEach((y, i) => {
+                const text = chars[Math.floor(Math.random() * chars.length)];
+                ctx.fillText(text, i * fontSize, y * fontSize);
+                if (y * fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
+                drops[i]++;
+            });
+        }
+        setInterval(drawMatrix, 50);
+
+        // DATOS DE HABILIDADES CON TRADUCCIÓN RUSA
+        const skillsData = {
+            pentesting: {
+                icon: '🛡️',
+                title: 'Pentesting',
+                desc: 'He participado activamente en bug bounties y domino Kali Linux a nivel avanzado. Participé en hackatones del Tec de Monterrey y he realizado pruebas de pentesting en vivo para gimnasios, cafeterías y la SEDENA en el AIFA. Uso herramientas como Nmap, Metasploit, Burp Suite y Wireshark en entornos reales.',
+                descRu: 'Я активно участвовал в bug bounty программах и владею Kali Linux на продвинутом уровне. Участвовал в хакатонах Tec de Monterrey и проводил живые тесты пентеста для спортзалов, кафе и SEDENA в AIFA. Использую инструменты Nmap, Metasploit, Burp Suite и Wireshark в реальных средах.'
+            },
+            forense: {
+                icon: '🔍',
+                title: 'Analista Forense Digital',
+                desc: 'Domino análisis de logs, recuperación de archivos eliminados, hash analysis (MD5, SHA256), timelines forenses y creación de reportes judiciales. Durante años he rastreado la actividad criminal de OFZ, organización que distribuye contenido ilegal como CP, abuso sexual y violaciones, documentando su infraestructura y TTPs.',
+                descRu: 'Владею анализом логов, восстановлением удалённых файлов, анализом хешей (MD5, SHA256), судебными таймлайнами и созданием судебных отчётов. Годами отслеживал криминальную активность OFZ - организации, распространяющей нелегальный контент типа CP, сексуального насилия и изнасилований, документируя их инфраструктуру и TTP.'
+            },
+            lenguajes: {
+                icon: '💻',
+                title: 'Lenguajes de Programación',
+                desc: 'Domino a profundidad Bash, Python, JavaScript, HTML y CSS para desarrollo de herramientas de seguridad. Conozco bien PowerShell, C++ y manejo básico de Go, Ruby y PHP. Uso scripting para automatización, parsing de logs y desarrollo de exploits personalizados.',
+                descRu: 'Глубоко владею Bash, Python, JavaScript, HTML и CSS для разработки инструментов безопасности. Хорошо знаю PowerShell, C++ и базово владею Go, Ruby и PHP. Использую скриптинг для автоматизации, парсинга логов и разработки персонализированных эксплойтов.'
+            },
+            soc: {
+                icon: '📊',
+                title: 'Analista de SOC',
+                desc: 'Analizo alertas de SIEM (Splunk/ELK), realizo triage de incidentes, correlaciono eventos, uso MITRE ATT&CK para clasificación de amenazas y elaboro reportes ejecutivos. Monitoreo 24/7, respuesta inicial a incidentes y creación de reglas de detección básicas.',
+                descRu: 'Анализирую оповещения SIEM (Splunk/ELK), провожу триаж инцидентов, коррелирую события, использую MITRE ATT&CK для классификации угроз и готовлю executive-отчёты. Круглосуточный мониторинг, первичный отклик на инциденты и создание базовых правил детекции.'
+            },
+            cripto: {
+                icon: '🔐',
+                title: 'Criptografía',
+                desc: 'Domino bien la lógica y algoritmos criptográficos básicos (AES, DES, RSA) y avanzados (ECC, Diffie-Hellman, SHA-3). Entiendo PKI, certificados digitales, hashing seguro y ataques criptográficos comunes como side-channel y chosen-plaintext.',
+                descRu: 'Хорошо владею логикой и базовыми криптоалгоритмами (AES, DES, RSA) и продвинутыми (ECC, Диффи-Хеллман, SHA-3). Понимаю PKI, цифровые сертификаты, безопасный хеширование и распространённые криптоатаки типа side-channel и chosen-plaintext.'
+            }
+        };
+
+        // Simulación de escaneo CON SONIDOS
+        const scanLines = ['Verificando integridad del sistema...', 'Analizando vectores de ataque...', 'Comprobando certificados SSL...', 'Validando credenciales...', 'Sistema autorizado ✓'];
+        let scanIndex = 0;
+        
+        function startScan() {
+            const scanOutput = document.getElementById('scanOutput');
+            const status = document.getElementById('finalStatus');
+            status.textContent = '';
+            scanOutput.innerHTML = '<div>Initializing security protocol...</div>';
+            playScanSound();
+            
+            const scanInterval = setInterval(() => {
+                if (scanIndex < scanLines.length) {
+                    playBeep(600 + scanIndex * 100, 0.1);
+                    const div = document.createElement('div');
+                    div.textContent = scanLines[scanIndex];
+                    scanOutput.appendChild(div);
+                    scanIndex++;
+                } else {
+                    clearInterval(scanInterval);
+                    setTimeout(() => {
+                        document.getElementById('finalStatus').textContent = '🟢 ACCESO CONCEDIDO - Elite Clearance Level';
+                        playAccessGranted();
+                    }, 500);
+                }
+            }, 800);
+        }
+
+        // Funciones del Modal CON SONIDOS Y RUSO
+        function openModal(skillKey, clickedCard) {
+            playCardClick();
+            setTimeout(() => {
+                playModalOpen();
+            }, 100);
+            
+            const skill = skillsData[skillKey];
+            document.getElementById('modalIcon').textContent = skill.icon;
+            document.getElementById('modalTitle').textContent = skill.title;
+            document.getElementById('modalDesc').textContent = skill.desc;
+            document.getElementById('modalDescRu').textContent = skill.descRu;
+            document.getElementById('skillModal').classList.add('show');
+            
+            document.querySelectorAll('.skill-card').forEach(card => card.classList.remove('clicked'));
+            clickedCard.classList.add('clicked');
+        }
+
+        function closeModal() {
+            playBeep(400, 0.15);
+            document.getElementById('skillModal').classList.remove('show');
+            document.querySelectorAll('.skill-card').forEach(card => card.classList.remove('clicked'));
+        }
+
+        // Event listeners para las tarjetas
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.skill-card').forEach(card => {
+                card.addEventListener('click', function(e) {
+                    const skillKey = this.getAttribute('data-skill');
+                    openModal(skillKey, this);
+                });
+            });
+
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') closeModal();
+            });
+
+            document.getElementById('skillModal').addEventListener('click', function(e) {
+                if (e.target === this) closeModal();
+            });
+        });
+
+        // Acceso y animaciones
+        function grantAccess() {
+            playBeep(1000, 0.2);
+            document.getElementById('accessScreen').classList.add('hidden');
+            setTimeout(() => {
+                document.getElementById('mainContent').classList.add('show');
+                animateProgressBars();
+            }, 1000);
+        }
+
+        function animateProgressBars() {
+            document.querySelectorAll('.progress-fill').forEach(bar => {
+                const width = bar.getAttribute('data-width');
+                setTimeout(() => {
+                    bar.style.width = width;
+                    playBeep(300 + Math.random() * 200, 0.05);
+                }, Math.random() * 500 + 200);
+            });
+        }
+
+        // Iniciar escaneo al cargar
+        window.addEventListener('load', function() {
+            document.addEventListener('click', function initAudio() {
+                if (audioContext.state === 'suspended') {
+                    audioContext.resume();
+                }
+                document.removeEventListener('click', initAudio);
+            }, { once: true });
+            
+            resizeCanvas();
+            initMatrix();
+            setTimeout(startScan, 1000);
+        });
+
+        window.addEventListener('resize', () => {
+            resizeCanvas();
+            initMatrix();
+        });
+    </script>
+</body>
+</html>
